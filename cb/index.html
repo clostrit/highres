@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'/>
+	<title>CB Drawing</title>
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<style>
+		* { border:0; margin:0; padding:0; }
+
+		#coordsInfo{
+			width: 20%;
+			position:fixed;
+			z-index: 10;
+			left:5%;
+			bottom:12px;
+			text-align: center;
+			font-size: 10pt;
+		}
+
+		#coords{
+			padding: 2px;
+			background-color: #fff;
+			display: inline;
+		}
+		#controlBar{
+			
+			width: 100%;
+			
+			position: fixed;
+			bottom:10px;
+			
+			z-index: 10;
+		}
+
+		#slider{
+			margin-left: 30%;
+			margin-right:10%;
+		}
+
+		#browserArea{
+			width:100%;
+			height:100%;
+			position: fixed;
+			left:0px;
+			top:0px;
+			overflow: hidden;
+		}
+
+		#imageArea{
+			position:absolute;
+			
+		
+		}
+
+		#imageArea img{
+			
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script>
+		$(document).ready(function(){
+
+			$( function() {
+    		$( "#imageArea" ).draggable({
+				  start: function() {
+				    console.log('started');
+				  },
+				  drag: function() {
+				    console.log('dragginh');
+				    var leftLookingAtAbsolute = - $('#imageArea').position().left + ( $( "#browserArea" ).width() /2);
+      			var topLookingAtAbsolute = - $('#imageArea').position().top + ( $( "#browserArea" ).height() /2);
+
+      			var leftLookingAtRelative = leftLookingAtAbsolute/ $( "#imageArea img" ).width();
+
+
+      			var topLookingAtRelative = topLookingAtAbsolute/ $( "#imageArea img" ).height();
+				    $('#coords').text('('+Math.round(leftLookingAtRelative*100) + ', ' + Math.round(topLookingAtRelative*100)+')' );
+				  },
+				  stop: function() {
+				    console.log('stopped');
+				  }
+    			});
+  			} );
+
+
+			var fullWidth = 18826;
+			var fullHeight = 3021;
+			function doZoom() {
+      			var zoomAmt = $( "#slider" ).slider( "value" );
+      			//var areaWidth = $('#imageArea').width();
+      			//var areaHeight = $('#imageArea').height();
+      			//var browserWidth = $('#browserArea').width();
+      			//var browserHeight = $('#browserArea').height();
+      			//var centerX = areaWidth/2;
+      			//var centerY = areaHeight/2;
+      			//var imgCenterX = zoomAmt*.01*fullWidth/2;
+      			//var imgCenterY = zoomAmt*.01*fullHeight/2;
+      			//var shiftX = centerX - imgCenterX;
+      			//var shiftY = centerY - imgCenterY;
+
+      			//find what point in percentage terms is being looked at so that after zoom we can do to that spot
+
+      			var leftLookingAtAbsolute = - $('#imageArea').position().left + ( $( "#browserArea" ).width() /2);
+      			var topLookingAtAbsolute = - $('#imageArea').position().top + ( $( "#browserArea" ).height() /2);
+
+      			var leftLookingAtRelative = leftLookingAtAbsolute/ $( "#imageArea img" ).width();
+
+
+      			var topLookingAtRelative = topLookingAtAbsolute/ $( "#imageArea img" ).height();
+
+
+      			
+
+      			$( "#imageArea img" ).css( "width",  zoomAmt*.01*fullWidth );
+      			$( "#imageArea img" ).css( "height",  zoomAmt*.01*fullHeight );
+
+
+
+      			var newLeftLookingAtAbsolute = zoomAmt*.01*fullWidth * leftLookingAtRelative;
+
+      			var newTopLookingAtAbsolute =  zoomAmt*.01*fullHeight * topLookingAtRelative;
+
+      			shiftX = ( $( "#browserArea" ).width() /2) - newLeftLookingAtAbsolute;
+      			shiftY = ( $( "#browserArea" ).height() /2) - newTopLookingAtAbsolute;
+      			$( "#imageArea" ).css( "left",  shiftX );
+      			$( "#imageArea" ).css( "top",  shiftY);
+
+
+    		}
+
+			$( function() {
+
+				//at load set to fit to window
+  				zoomLevel = Math.max(Math.min(($('#browserArea').width()/fullWidth), ($('#browserArea').height()/fullHeight)),.25);
+  				//alert (zoomLevel);
+  				//$("#slider").slider("value", zoomLevel*100);
+
+
+    			$( "#slider" ).slider({
+    			max: 100,
+    			min: 5,
+      			value: zoomLevel*100,
+      			slide: doZoom,
+      			change: doZoom
+    			});
+
+    			$( "#imageArea img" ).css( "width",  zoomLevel*fullWidth );
+      			$( "#imageArea img" ).css( "height",  zoomLevel*fullHeight );
+
+      			var topPos = ($('#browserArea').height()/2) - (zoomLevel*fullHeight/2)
+      			var leftPos = ($('#browserArea').width()/2) - (zoomLevel*fullWidth/2)
+
+      			$( "#imageArea" ).css( "left",  leftPos );
+      			$( "#imageArea" ).css( "top",  topPos);
+  			} );
+
+
+  			$('#imageArea').on('DOMMouseScroll mousewheel', function (e) {
+				  if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0) { //
+				    
+				    var curVal = $("#slider").slider('value');
+				    $("#slider").slider("value", curVal-1);
+				  } else {
+				    
+				    var curVal = $("#slider").slider('value');
+				    $("#slider").slider("value", curVal+1);
+				  }
+				  
+				  return false;
+				});
+
+  		
+
+		});
+	</script>
+
+</head>
+
+
+
+
+<body>
+	<div id ="coordsInfo">
+		<p id="coords">(50, 50)</p>
+	</div>
+
+	<div id ="controlBar">
+		
+		<div id="slider"> </div>
+	</div>
+
+	<div id="browserArea">
+		<div id="imageArea">
+			<img src="drawing.jpg">
+		</div>
+	</div>
+
+
+</body>
