@@ -132,9 +132,11 @@
 			$( function() {
 
 				//at load set to fit to window
-  				zoomLevel = Math.max(Math.min(($('#browserArea').width()/fullWidth), ($('#browserArea').height()/fullHeight)),.25);
+  				//zoomLevel = Math.max(Math.min(($('#browserArea').width()/fullWidth), ($('#browserArea').height()/fullHeight)),.25);
   				//alert (zoomLevel);
   				//$("#slider").slider("value", zoomLevel*100);
+				
+				zoomLevel = 1.0;
 
 
     			$( "#slider" ).slider({
