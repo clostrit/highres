@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--HOW TO USE THIS:
+
+1. note that as-is the file assumes a file called "drawing.jpg" in the same directory as this index. You can either replace the sample image with your image or change the line of code near the very end of this document that currently reads
+			<img src="drawing.jpg">
+to 
+			<img src="whateveryourimageis.jpg">
+or
+			<img src="https://fullURLto/yourimage.jpg">
+
+
+2. VERY IMPORTANT: you must adjust these two lines of code found aroudn like 100 in this doc
+			var fullWidth = 6379;
+			var fullHeight = 6772; 
+to match the exact size (in pixels) of your full-size image
+
+3. (optional) you can play with the initial zoom level. Explanation is at line 132. 
+
+4. please note that I whipped this up fairly quickly. I can't promise it's without bugs or will perform perfectly. It doesn't work on mobile devices becuase it relies on a cursor. That is fixable, but I ran out of time. 
+-->
+
+
+<html>
+<head>
+	<meta charset='utf-8'/>
+	<title>Highres Zoom Interface</title>
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<style>
+		* { border:0; margin:0; padding:0; }
+
+		#coordsInfo{
+			width: 20%;
+			position:fixed;
+			z-index: 10;
+			left:5%;
+			bottom:12px;
+			text-align: center;
+			font-size: 10pt;
+		}
+
+		#coords{
+			padding: 2px;
+			background-color: #fff;
+			display: inline;
+		}
+		#controlBar{
+			width: 100%;
+			position: fixed;
+			bottom:10px;
+			z-index: 10;
+		}
+
+		#slider{
+			margin-left: 30%;
+			margin-right:10%;
+		}
+
+		#browserArea{
+			width:100%;
+			height:100%;
+			position: fixed;
+			left:0px;
+			top:0px;
+			overflow: hidden;
+		}
+
+		#imageArea{
+			position:absolute;
+		}
+
+		#imageArea img{
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script>
+		$(document).ready(function(){
+
+			$( function() {
+    		$( "#imageArea" ).draggable({
+				  start: function() {
+				    console.log('started');
+				  },
+				  drag: function() {
+				    console.log('dragginh');
+				    var leftLookingAtAbsolute = - $('#imageArea').position().left + ( $( "#browserArea" ).width() /2);
+      			var topLookingAtAbsolute = - $('#imageArea').position().top + ( $( "#browserArea" ).height() /2);
+
+      			var leftLookingAtRelative = leftLookingAtAbsolute/ $( "#imageArea img" ).width();
+
+      			var topLookingAtRelative = topLookingAtAbsolute/ $( "#imageArea img" ).height();
+				    $('#coords').text('('+Math.round(leftLookingAtRelative*100) + ', ' + Math.round(topLookingAtRelative*100)+')' );
+				  },
+				  stop: function() {
+				    console.log('stopped');
+				  }
+    			});
+  			} );
+
+  			//////////////////
+  			//Modify these next two lines to reflect your actual image size. If you dont, your image will be distored
+
+			var fullWidth = 9000;
+			var fullHeight = 9000;
+
+			function doZoom() {
+      			var zoomAmt = $( "#slider" ).slider( "value" );
+
+      			var leftLookingAtAbsolute = - $('#imageArea').position().left + ( $( "#browserArea" ).width() /2);
+      			var topLookingAtAbsolute = - $('#imageArea').position().top + ( $( "#browserArea" ).height() /2);
+
+      			var leftLookingAtRelative = leftLookingAtAbsolute/ $( "#imageArea img" ).width();
+
+      			var topLookingAtRelative = topLookingAtAbsolute/ $( "#imageArea img" ).height();
+      			
+      			$( "#imageArea img" ).css( "width",  zoomAmt*.01*fullWidth );
+      			$( "#imageArea img" ).css( "height",  zoomAmt*.01*fullHeight );
+
+      			var newLeftLookingAtAbsolute = zoomAmt*.01*fullWidth * leftLookingAtRelative;
+
+      			var newTopLookingAtAbsolute =  zoomAmt*.01*fullHeight * topLookingAtRelative;
+
+      			shiftX = ( $( "#browserArea" ).width() /2) - newLeftLookingAtAbsolute;
+      			shiftY = ( $( "#browserArea" ).height() /2) - newTopLookingAtAbsolute;
+      			$( "#imageArea" ).css( "left",  shiftX );
+      			$( "#imageArea" ).css( "top",  shiftY);
+
+    		}
+
+			$( function() {
+
+				//You can adjust what the zoomLevel starts at when the page first loads. Here are some examples of you want to play with it.
+
+				//the following line is a scale to fit but not smaller than 5%.
+
+  				//zoomLevel = Math.max(Math.min(($('#browserArea').width()/fullWidth), ($('#browserArea').height()/fullHeight)),.05);
+
+  				//this would be scale to FILL the screen
+  				//zoomLevel = Math.max($('#browserArea').width()/fullWidth, $('#browserArea').height()/fullHeight);
+
+  				//you could set it to be an arbitrary prcentage, like 50%:
+  				//zoomLevel = .5 
+
+  				//but for best performance it's best to ask the browser to display it full size initially and then let the viewer "back out", which is why I've used that here:
+
+  				zoomLevel = 1.0
+
+    			$( "#slider" ).slider({
+    			max: 100,
+    			min: 5,
+      			value: zoomLevel*100,
+      			slide: doZoom,
+      			change: doZoom
+    			});
+
+    			$( "#imageArea img" ).css( "width",  zoomLevel*fullWidth );
+      			$( "#imageArea img" ).css( "height",  zoomLevel*fullHeight );
+
+      			var topPos = ($('#browserArea').height()/2) - (zoomLevel*fullHeight/2)
+      			var leftPos = ($('#browserArea').width()/2) - (zoomLevel*fullWidth/2)
+
+      			$( "#imageArea" ).css( "left",  leftPos );
+      			$( "#imageArea" ).css( "top",  topPos);
+  			} );
+
+
+  			$('#imageArea').on('DOMMouseScroll mousewheel', function (e) {
+				  if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0) { 
+				    
+				    var curVal = $("#slider").slider('value');
+				    $("#slider").slider("value", curVal-1);
+				  } else {
+				    
+				    var curVal = $("#slider").slider('value');
+				    $("#slider").slider("value", curVal+1);
+				  }
+				  
+				  return false;
+				});
+		});
+	</script>
+
+</head>
+<body>
+	<div id ="coordsInfo">
+		<p id="coords">(50, 50)</p>
+	</div>
+
+	<div id ="controlBar">
+		
+		<div id="slider"> </div>
+	</div>
+
+	<div id="browserArea">
+		<div id="imageArea">
+			<img src="drawing.jpg">
+		</div>
+	</div>
+</body>
